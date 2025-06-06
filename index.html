@@ -1,0 +1,182 @@
+<!DOCTYPE html><html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>CyberWar: 러시아 vs 우크라이나 가상 사이버전</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .system {
+      border: 2px solid #444;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 10px auto;
+      width: 300px;
+      background-color: #1e1e1e;
+    }
+    .status {
+      font-weight: bold;
+    }
+    .status.normal { color: #4caf50; }
+    .status.warning { color: #ffc107; }
+    .status.down { color: #f44336; }
+    .controls button {
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #333;
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #555;
+    }
+    #log {
+      background-color: #222;
+      padding: 10px;
+      margin-top: 20px;
+      height: 200px;
+      overflow-y: auto;
+      text-align: left;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .bar-container {
+      background-color: #333;
+      width: 80%;
+      margin: 10px auto;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background-color: #f44336;
+      width: 0%;
+      transition: width 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <h1>가상 사이버전 (10215우승연)</h1>
+  <p>러시아 vs 우크라이나 의 상황을 기반으로 만든 가상 사이버전</p>  <div class="system" id="power">
+    <h3>방화벽 안정도</h3>
+    <p class="status" id="status-power">정상</p>
+  </div>
+  <div class="system" id="admin">
+    <h3>행정 시스템</h3>
+    <p class="status" id="status-admin">정상</p>
+  </div>
+  <div class="system" id="comms">
+    <h3>서버 안정도</h3>
+    <p class="status" id="status-comms">정상</p>
+  </div>  <div class="bar-container">
+    <div class="bar-fill" id="panic-bar"></div>
+  </div>
+  <p>국가 시스템 혼란도: <span id="panic-level">0%</span></p>  <div class="controls">
+    <button onclick="zerodayAttack()">제로데이어택Zero-day attack (해킹)</button>
+    <button onclick="wiperAttack()">와이퍼Wiper (악성코드)</button>
+    <button onclick="DDosAttack()">디도스DDos (서버 마비)</button>
+    <br>
+    <button onclick="upgradeFirewall()">방화벽 강화</button>
+    <button onclick="patchSystem()">시스템 패치</button>
+    <button onclick="calmPublic()">로드 밸런싱</button>
+  </div>  <div id="log"></div>  <script>
+    let systems = {
+      power: {health: 100, status: 'normal'},
+      admin: {health: 100, status: 'normal'},
+      comms: {health: 100, status: 'normal'}
+    };
+    let panic = 0;
+
+    function updateStatus() {
+      for (const key in systems) {
+        const el = document.getElementById(`status-${key}`);
+        const s = systems[key];
+        if (s.health <= 0) {
+          s.status = 'down';
+        } else if (s.health <= 50) {
+          s.status = 'warning';
+        } else {
+          s.status = 'normal';
+        }
+        el.className = `status ${s.status}`;
+        el.textContent = s.status === 'normal' ? '정상'
+          : s.status === 'warning' ? '경고'
+          : '마비';
+      }
+      panic = Math.min(100, panic);
+      document.getElementById("panic-bar").style.width = panic + "%";
+      document.getElementById("panic-level").innerText = panic + "%";
+      checkGameOver();
+    }
+
+    function log(text) {
+      const logBox = document.getElementById("log");
+      logBox.innerHTML = ". " + text + "<br>" + logBox.innerHTML;
+    }
+
+    function zerodayAttack() {
+      for (const key in systems) {
+        systems[key].health -= Math.floor(Math.random() * 20) + 5;
+      }
+      panic += 10;
+      log("제로데이 어택으로 전체 시스템의 방화벽이 무너졌습니다.");
+      updateStatus();
+    }
+
+    function wiperAttack() {
+      const keys = Object.keys(systems);
+      const target = keys[Math.floor(Math.random() * keys.length)];
+      systems[target].health -= 40;
+      panic += 15;
+      log("와이퍼 공격으로 행정 시스템이 큰 피해를 입었습니다.");
+      updateStatus();
+    }
+
+    function DDosAttack() {
+      panic += 20;
+      log("디도스 공격으로 서버가 마비 되었습니다.");
+      updateStatus();
+    }
+
+    function upgradeFirewall() {
+      for (const key in systems) {
+        systems[key].health += 10;
+      }
+      log("전 시스템의 방화벽이 강화되었습니다.");
+      updateStatus();
+    }
+
+    function patchSystem() {
+      const keys = Object.keys(systems);
+      const target = keys[Math.floor(Math.random() * keys.length)];
+      systems[target].health += 30;
+      log("시스템이 패치되어 행정 시스템이 일부 회복되었습니다.");
+      updateStatus();
+    }
+
+    function calmPublic() {
+      panic -= 20;
+      panic = Math.max(panic, 0);
+      log("서버 안정화 조치가 이루어졌습니다.");
+      updateStatus();
+    }
+
+    function checkGameOver() {
+      const allDown = Object.values(systems).every(s => s.status === 'down');
+      if (allDown) {
+        alert("국가 서버의 기능이 모두 마비되었습니다. 사이버전 패배.");
+      } else if (panic >= 100) {
+        alert("국가 시스템의 혼란도가 매우 높아 시스템이 강제 종료됩니다. 사이버전 패배.");
+      }
+    }
+
+    updateStatus();
+  </script></body>
+</html>
